@@ -19,6 +19,10 @@ public interface OrderService {
 
     
 	Order getOrder(String orderId);
+	
+	public void confirmOrder(String id);
+	
+	public void UnConfirmOrder(String id);
 
 	
 }

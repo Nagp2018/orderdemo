@@ -7,6 +7,7 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.jms.annotation.JmsListener;
 import org.springframework.jms.core.JmsTemplate;
 import org.springframework.stereotype.Service;
 
@@ -32,7 +33,7 @@ public class OrderServiceImpl implements OrderService {
 		this.orders.put(order.getOrderID(), order);	
 		System.out.print("Order"+ this.orders);
 		
-		//jmsTemplate.convertAndSend("OrderRequestReceivedEvent", order.getOrderID());
+		jmsTemplate.convertAndSend("OrderRequestReceivedEvent", order.getOrderID());
 		
 		return order;
 	}
@@ -42,5 +43,30 @@ public class OrderServiceImpl implements OrderService {
 		System.out.print("Order"+ this.orders.get(orderId));
 		return this.orders.get(orderId);
 	}
+	
+	
+	@Override
+	@JmsListener(destination="InventoryAvaliableEvent")
+	public void confirmOrder(String id) {
+		System.out.println("InventoryAvaliableEvent");
+		Order order = this.orders.get(id);
+		order.setOrderStatus(OrderStatus.CONFIRMED);
+		this.orders.put(order.getOrderID(), order);		
+		//jmsTemplate.convertAndSend("CreateOrderShippingEvent", order.getOrderID());
+		
+	}
+	
+	@Override
+	@JmsListener(destination="InventoryNotAvaliableEvent")
+	public void UnConfirmOrder(String id) {
+		System.out.println("InventoryNotAvaliableEvent");
+		Order order = this.orders.get(id);
+		order.setOrderStatus(OrderStatus.UNCONFIRMED);
+		order.setRemarks("Product is out of stock");
+		this.orders.put(order.getOrderID(), order);
+		//jmsTemplate.convertAndSend("ProductNotAvaialbleEvent", order.getOrderID());
+		
+	}
+
 
 }
